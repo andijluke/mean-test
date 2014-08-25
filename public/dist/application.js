@@ -44,6 +44,10 @@ angular.element(document).ready(function () {
 ApplicationConfiguration.registerModule('articles');'use strict';
 // Use Applicaion configuration module to register a new module
 ApplicationConfiguration.registerModule('core');'use strict';
+// Use applicaion configuration module to register a new module
+ApplicationConfiguration.registerModule('stuff');'use strict';
+// Use applicaion configuration module to register a new module
+ApplicationConfiguration.registerModule('things');'use strict';
 // Use Applicaion configuration module to register a new module
 ApplicationConfiguration.registerModule('users');'use strict';
 // Configuring the Articles module
@@ -176,16 +180,20 @@ angular.module('core').controller('HomeController', [
 //Menu service used for managing  menus
 angular.module('core').service('Menus', [function () {
     // Define a set of default roles
-    this.defaultRoles = ['user'];
+    this.defaultRoles = ['*'];
     // Define the menus object
     this.menus = {};
     // A private function for rendering decision 
     var shouldRender = function (user) {
       if (user) {
-        for (var userRoleIndex in user.roles) {
-          for (var roleIndex in this.roles) {
-            if (this.roles[roleIndex] === user.roles[userRoleIndex]) {
-              return true;
+        if (!!~this.roles.indexOf('*')) {
+          return true;
+        } else {
+          for (var userRoleIndex in user.roles) {
+            for (var roleIndex in this.roles) {
+              if (this.roles[roleIndex] === user.roles[userRoleIndex]) {
+                return true;
+              }
             }
           }
         }
@@ -245,7 +253,7 @@ angular.module('core').service('Menus', [function () {
         menuItemClass: menuItemType,
         uiRoute: menuItemUIRoute || '/' + menuItemURL,
         isPublic: isPublic === null || typeof isPublic === 'undefined' ? this.menus[menuId].isPublic : isPublic,
-        roles: roles || this.defaultRoles,
+        roles: roles === null || typeof roles === 'undefined' ? this.menus[menuId].roles : roles,
         position: position || 0,
         items: [],
         shouldRender: shouldRender
@@ -266,7 +274,7 @@ angular.module('core').service('Menus', [function () {
             link: menuItemURL,
             uiRoute: menuItemUIRoute || '/' + menuItemURL,
             isPublic: isPublic === null || typeof isPublic === 'undefined' ? this.menus[menuId].items[itemIndex].isPublic : isPublic,
-            roles: roles || this.defaultRoles,
+            roles: roles === null || typeof roles === 'undefined' ? this.menus[menuId].items[itemIndex].roles : roles,
             position: position || 0,
             shouldRender: shouldRender
           });
@@ -306,6 +314,65 @@ angular.module('core').service('Menus', [function () {
     //Adding the topbar menu
     this.addMenu('topbar');
   }]);'use strict';
+//Setting up route
+angular.module('stuff').config([
+  '$stateProvider',
+  function ($stateProvider) {
+    // Stuff state routing
+    $stateProvider.state('stuff', {
+      url: '/stuff',
+      templateUrl: 'modules/stuff/views/stuff.client.view.html'
+    });
+  }
+]);'use strict';
+angular.module('stuff').controller('StuffController', [
+  '$scope',
+  function ($scope) {
+  }
+]);'use strict';
+// Things module config
+angular.module('things').run([
+  'Menus',
+  function (Menus) {
+    // Set top bar menu items
+    Menus.addMenuItem('topbar', 'Things', 'things', 'dropdown', '/things(/create)?');  //Menus.addSubMenuItem('topbar', 'articles', 'List Articles', 'articles');
+                                                                                       //Menus.addSubMenuItem('topbar', 'articles', 'New Article', 'articles/create');
+  }
+]);'use strict';
+//Setting up route
+angular.module('things').config([
+  '$stateProvider',
+  function ($stateProvider) {
+    // Things state routing
+    $stateProvider.state('listThings', {
+      url: '/things',
+      templateUrl: 'modules/things/views/things.client.view.html'
+    });
+  }
+]);'use strict';
+angular.module('things').controller('ThingsController', [
+  '$scope',
+  '$stateParams',
+  '$location',
+  'Things',
+  function ($scope, $stateParams, $location, Things) {
+    // Controller Logic
+    // ...
+    console.log('Angular controller loaded');
+    $scope.find = function () {
+      $scope.thing = Things.query();
+    };
+  }
+]);'use strict';
+angular.module('things').factory('Things', [
+  '$resource',
+  function ($resource) {
+    // Things service logic
+    // ...
+    // Public API
+    return $resource('/things');
+  }
+]);'use strict';
 // Config HTTP Error Handling
 angular.module('users').config([
   '$httpProvider',
